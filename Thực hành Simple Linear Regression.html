@@ -1,0 +1,1210 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Thực hành Simple Linear Regression</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: một cột như phiếu thực hành; mỗi bước = giải thích → code mẫu → ô tự gõ (chạy, kiểm tra) → kết quả mong đợi */
+:root {
+  --bg: #ffffff;
+  --surface: #f7f2f2;
+  --ink: #221c1d;
+  --muted: #62585a;
+  --line: #e7dbdb;
+  --accent: #a5282c;
+  --accent-ink: #ffffff;
+  --accent-soft: #f7e4e4;
+  --code-bg: #fbf8f8;
+  --edit-bg: #ffffff;
+  --out-bg: #f1f4f3;
+  --out-ink: #24312c;
+  --ok: #2f6f4a; --ok-bg: #e8f3ec;
+  --warn: #8a5a00; --warn-bg: #fbf1dc;
+  --err: #b3261e; --err-bg: #fbe9e7;
+  --tk-kw: #a5282c; --tk-fn: #1d5a8a; --tk-str: #2b7349; --tk-num: #965800; --tk-com: #7c7173;
+  --font-display: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161314; --surface: #201b1c; --ink: #eee6e6; --muted: #b4a9ab; --line: #372e30;
+    --accent: #f0797d; --accent-ink: #1b1213; --accent-soft: #3a2325;
+    --code-bg: #1c1718; --edit-bg: #120f10; --out-bg: #141b18; --out-ink: #d3e4dc;
+    --ok: #8fd1a9; --ok-bg: #16261d; --warn: #f0c46a; --warn-bg: #2b2412; --err: #ff8f86; --err-bg: #331816;
+    --tk-kw: #f38c90; --tk-fn: #82bce9; --tk-str: #91d4aa; --tk-num: #e8ba68; --tk-com: #948a8c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161314; --surface: #201b1c; --ink: #eee6e6; --muted: #b4a9ab; --line: #372e30;
+  --accent: #f0797d; --accent-ink: #1b1213; --accent-soft: #3a2325;
+  --code-bg: #1c1718; --edit-bg: #120f10; --out-bg: #141b18; --out-ink: #d3e4dc;
+  --ok: #8fd1a9; --ok-bg: #16261d; --warn: #f0c46a; --warn-bg: #2b2412; --err: #ff8f86; --err-bg: #331816;
+  --tk-kw: #f38c90; --tk-fn: #82bce9; --tk-str: #91d4aa; --tk-num: #e8ba68; --tk-com: #948a8c;
+  color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+.page {
+  max-width: 820px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 40px;
+}
+.page > * { min-width: 0; }
+
+.masthead { display: grid; gap: 12px; }
+.eyebrow { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.formula { font-family: var(--font-mono); font-size: 15px; background: var(--accent-soft); color: var(--ink); padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+
+.howto { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 16px; }
+.howto h2 { margin: 0; font-size: 20px; font-family: var(--font-display); }
+.howto ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.howto li::marker { color: var(--accent); font-weight: 700; }
+kbd { font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 0 6px; background: var(--bg); }
+.engine { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; }
+.engine-state { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+.engine[data-state="loading"] .dot { background: var(--warn); }
+.engine[data-state="ready"] .dot { background: var(--ok); }
+.engine[data-state="failed"] .dot { background: var(--err); }
+.progress { color: var(--muted); font-size: 14px; }
+
+.steps-nav { display: grid; gap: 10px; }
+.steps-nav .label { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.steps-nav .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.steps-nav a { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px 6px 6px; font-size: 14px; background: var(--bg); }
+.steps-nav a:hover { border-color: var(--accent); }
+.steps-nav a span { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; }
+.steps-nav a.done { border-color: var(--ok); }
+.steps-nav a.done span { background: var(--ok); color: var(--bg); }
+
+.step { display: grid; gap: 18px; scroll-margin-top: 16px; }
+.step h2 { display: flex; align-items: center; gap: 12px; margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 24px; line-height: 1.25; text-wrap: balance; }
+.step h2 .num { flex: none; display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 18px; }
+.prose { display: grid; gap: 14px; }
+.prose > * { margin: 0; min-width: 0; }
+.prose p, .prose li { max-width: 72ch; }
+.prose ul { padding-left: 22px; display: grid; gap: 6px; }
+code { font-family: var(--font-mono); }
+.prose code, .result code, .out-list code, .howto code { font-size: 0.86em; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+math { font-size: 1.05em; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th { text-align: left; font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--surface); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+td { padding: 12px 14px; vertical-align: top; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { width: 32%; }
+td:first-child code { background: var(--code-bg); }
+
+/* Code mẫu và ô tự gõ */
+.ref, .lab { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.ref { background: var(--code-bg); }
+.lab { background: var(--edit-bg); border-color: var(--accent); }
+.block-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.lab-head { background: var(--accent-soft); border-bottom-color: var(--line); }
+.block-label { font-weight: 700; font-size: 14px; }
+.block-hint { font-size: 13px; color: var(--muted); }
+pre { margin: 0; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.6; tab-size: 4; }
+pre.code { padding: 16px; }
+.code .k, .code .kn, .code .kc, .code .ow { color: var(--tk-kw); font-weight: 500; }
+.code .nf, .code .nb, .code .bp { color: var(--tk-fn); }
+.code .s, .code .s1, .code .s2, .code .sa, .code .se { color: var(--tk-str); }
+.code .si { color: var(--tk-fn); }
+.code .mi, .code .mf { color: var(--tk-num); }
+.code .c1, .code .c { color: var(--tk-com); font-style: italic; }
+
+.editor { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+.gutter {
+  font-family: var(--font-mono); font-size: 14px; line-height: 1.6; color: var(--muted); text-align: right;
+  padding: 14px 10px 14px 12px; border-right: 1px solid var(--line); background: var(--code-bg);
+  user-select: none; display: flex; flex-direction: column;
+}
+.gutter span { min-width: 2ch; padding: 0 4px; border-radius: 4px; }
+.gutter span.mark { background: var(--err-bg); color: var(--err); font-weight: 700; }
+.ed {
+  font-family: var(--font-mono); font-size: 14px; line-height: 1.6; color: var(--ink); background: transparent;
+  border: 0; margin: 0; padding: 14px 16px; resize: none; overflow-x: auto; overflow-y: hidden;
+  white-space: pre; tab-size: 4; width: 100%; min-height: calc(8 * 1.6em + 28px); outline: none;
+}
+.ed::placeholder { color: var(--muted); font-style: italic; }
+.lab:focus-within { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.lab-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--surface); }
+button { font: 500 14px var(--font-body); border-radius: 999px; padding: 8px 16px; cursor: pointer; }
+.btn-run { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); min-width: 96px; font-weight: 700; }
+.btn-run:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-run:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-line { background: var(--bg); color: var(--accent); border: 1px solid var(--accent); }
+.btn-line:hover { background: var(--accent-soft); }
+.btn-quiet { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.btn-quiet:hover { color: var(--ink); border-color: var(--muted); }
+.btn-quiet.armed { color: var(--err); border-color: var(--err); }
+
+.result { padding: 14px 16px 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.result.ok { background: var(--ok-bg); }
+.result.warn { background: var(--warn-bg); }
+.result.err { background: var(--err-bg); }
+.verdict { font-weight: 700; }
+.result.ok .verdict { color: var(--ok); }
+.result.warn .verdict { color: var(--warn); }
+.result.err .verdict { color: var(--err); }
+.result p { margin: 0; max-width: 72ch; }
+.result ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.result .raw { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.result .stdout-label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.result pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.cmp { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: baseline; }
+.cmp span { font-size: 13px; color: var(--muted); }
+.cmp code { white-space: pre; overflow-x: auto; display: block; }
+mark { background: var(--warn-bg); color: var(--warn); border-radius: 3px; padding: 0 1px; font-weight: 700; }
+
+.out { border-radius: 12px; background: var(--out-bg); color: var(--out-ink); overflow: hidden; }
+.out-head { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 16px 0; color: var(--ok); }
+.out pre { padding: 8px 16px 16px; }
+.out-note { margin: 6px 16px 0; font-size: 15px; }
+.out-list { margin: 6px 0 16px; padding-left: 38px; display: grid; gap: 4px; font-size: 15px; }
+
+footer { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  .page { gap: 32px; padding-block: 28px 56px; }
+  .step h2 { font-size: 21px; }
+  .table-wrap { border: 0; overflow: visible; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  thead { display: none; }
+  tr { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  td { border-bottom: 1px solid var(--line); width: auto; }
+  td:first-child { width: auto; background: var(--surface); }
+  td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  pre, .ed, .gutter { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<main class="page">
+  <header class="masthead">
+    <div class="eyebrow">Học máy · Bài 1 · Trịnh Quang Tin</div>
+    <h1>Thực hành Simple Linear Regression</h1>
+    <p class="lede">Dự đoán điểm thi từ số giờ ôn tập bằng đường thẳng <span class="formula">ŷ = w·x + b</span>. Bạn sẽ tự gõ lại code của 6 bước và chạy Python ngay trên trang này, không cần cài đặt gì.</p>
+  </header>
+
+  <section class="howto" aria-labelledby="howto-title">
+    <h2 id="howto-title">Cách học trên trang này</h2>
+    <ol>
+      <li>Đọc bảng giải thích để hiểu từng dòng code làm gì và vì sao.</li>
+      <li>Nhìn <strong>Code mẫu</strong> rồi <strong>tự gõ lại</strong> vào <strong>Ô của bạn</strong>. Đừng sao chép: gõ tay giúp bạn nhớ cú pháp. Có thể bỏ qua các dòng chú thích bắt đầu bằng <code>#</code>.</li>
+      <li>Bấm <strong>Chạy</strong> (hoặc <kbd>Ctrl</kbd> + <kbd>Enter</kbd>). Trang sẽ báo bạn làm đúng chưa và so với <strong>Kết quả mong đợi</strong>.</li>
+      <li>Nếu bị lỗi, đọc gợi ý bằng tiếng Việt, rồi bấm <strong>Kiểm tra cách gõ</strong> để tìm dòng bạn gõ khác code mẫu.</li>
+      <li>Làm <strong>đúng thứ tự</strong> từ bước 1. Bước sau dùng lại hàm và biến của bước trước, giống như trong Colab.</li>
+    </ol>
+    <div class="engine" id="engine" data-state="loading">
+      <span class="engine-state"><span class="dot" aria-hidden="true"></span><span id="engine-text">Đang tải trình chạy Python...</span></span>
+      <span class="progress" id="progress"></span>
+      <button type="button" class="btn-quiet" id="reset-all">Xóa bộ nhớ, làm lại từ bước 1</button>
+    </div>
+  </section>
+
+  <nav class="steps-nav" aria-label="Các bước">
+    <div class="label">Các bước</div>
+    <div class="chips">
+<a href="#buoc-1"><span>1</span>Bốn hàm cơ bản</a>
+<a href="#buoc-2"><span>2</span>Thử 4 bước với một sinh viên</a>
+<a href="#buoc-3"><span>3</span>Đo độ sai trên cả lớp: MAE và MSE</a>
+<a href="#buoc-4"><span>4</span>Mô hình chưa huấn luyện sai bao nhiêu?</a>
+<a href="#buoc-5"><span>5</span>Huấn luyện trên cả 4 sinh viên</a>
+<a href="#buoc-6"><span>6</span>Sau khi huấn luyện</a>
+    </div>
+  </nav>
+
+
+<section class="step" id="buoc-1" data-step="1">
+  <h2><span class="num">1</span><span>Bốn hàm cơ bản</span></h2>
+  <div class="prose"><p>Huấn luyện mô hình gồm 4 việc lặp đi lặp lại: <strong>dự đoán → tính loss → tính đạo hàm → cập nhật tham số</strong>. Mỗi việc được viết thành một hàm.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Dòng code</th>
+<th>Làm gì</th>
+<th>Vì sao làm vậy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-label="Dòng code"><code>def predict(x, w, b):</code></td>
+<td data-label="Làm gì">Tạo một hàm tên <code>predict</code>, nhận 3 đầu vào: <code>x</code> (số giờ ôn), <code>w</code> và <code>b</code> (hai tham số của đường thẳng).</td>
+<td data-label="Vì sao làm vậy">Đóng gói công thức vào hàm để dùng lại nhiều lần mà không phải viết lại. Dấu <code>:</code> ở cuối báo rằng bên dưới là phần thân hàm.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>return x * w + b</code></td>
+<td data-label="Làm gì">Tính <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo>=</mo><mi>w</mi><mi>x</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">\hat{y} = wx + b</annotation></semantics></math> và trả kết quả ra ngoài.</td>
+<td data-label="Vì sao làm vậy">Đây chính là <strong>mô hình</strong>: đường thẳng dùng để dự đoán điểm. <code>return</code> đưa kết quả về chỗ gọi hàm; thiếu <code>return</code> thì hàm không trả ra gì.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>def compute_loss(y_hat, y):</code></td>
+<td data-label="Làm gì">Hàm tính loss của <strong>một</strong> sinh viên, nhận dự đoán <code>y_hat</code> và điểm thật <code>y</code>.</td>
+<td data-label="Vì sao làm vậy">Cần một con số cho biết dự đoán sai nhiều hay ít.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>return (y_hat - y) ** 2</code></td>
+<td data-label="Làm gì">Lấy (dự đoán − thực tế) rồi bình phương. <code>**</code> là phép lũy thừa trong Python.</td>
+<td data-label="Vì sao làm vậy">Bình phương để <strong>bỏ dấu âm</strong> (dự đoán cao hay thấp đều là sai) và để <strong>phạt nặng</strong> những lần sai nhiều.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>def compute_gradient(y_hat, y, x):</code></td>
+<td data-label="Làm gì">Hàm tính đạo hàm của loss theo <code>w</code> và theo <code>b</code>.</td>
+<td data-label="Vì sao làm vậy">Đạo hàm cho biết nên <strong>tăng hay giảm</strong> <code>w</code>, <code>b</code> để loss nhỏ đi. Cần thêm <code>x</code> vì công thức đạo hàm theo <code>w</code> có chứa <code>x</code>.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>dw = 2 * x * (y_hat - y)</code></td>
+<td data-label="Làm gì">Tính <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>∂</mi><mi>L</mi></mrow><mrow><mi>∂</mi><mi>w</mi></mrow></mfrac><mo>=</mo><mn>2</mn><mi>x</mi><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo>−</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\frac{\partial L}{\partial w} = 2x(\hat{y} - y)</annotation></semantics></math>.</td>
+<td data-label="Vì sao làm vậy">Công thức rút ra bằng quy tắc dây chuyền (mục II.3 bài đọc). Phải viết đủ dấu <code>*</code>: Python không hiểu cách viết <code>2x</code>.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>db = 2 * (y_hat - y)</code></td>
+<td data-label="Làm gì">Tính <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>∂</mi><mi>L</mi></mrow><mrow><mi>∂</mi><mi>b</mi></mrow></mfrac><mo>=</mo><mn>2</mn><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo>−</mo><mi>y</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\frac{\partial L}{\partial b} = 2(\hat{y} - y)</annotation></semantics></math>.</td>
+<td data-label="Vì sao làm vậy">Giống <code>dw</code> nhưng không có <code>x</code>, vì khi <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> tăng 1 thì <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>y</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{y}</annotation></semantics></math> cũng chỉ tăng 1.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>return dw, db</code></td>
+<td data-label="Làm gì">Trả về <strong>hai</strong> giá trị cùng lúc.</td>
+<td data-label="Vì sao làm vậy">Cần cả hai để sửa cả <code>w</code> lẫn <code>b</code>. Khi gọi hàm, ta nhận bằng hai biến: <code>dw, db = compute_gradient(...)</code>.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>def update_weight(w, b, dw, db, lr):</code></td>
+<td data-label="Làm gì">Hàm cập nhật tham số. <code>lr</code> là <em>learning rate</em> (tốc độ học, ký hiệu <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math> trong bài đọc).</td>
+<td data-label="Vì sao làm vậy">Đây là bước <strong>“học”</strong>: sửa <code>w</code>, <code>b</code> dựa vào đạo hàm.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>new_w = w - lr * dw</code></td>
+<td data-label="Làm gì"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mtext mathvariant="normal">mới</mtext></msub><mo>=</mo><mi>w</mi><mo>−</mo><mi>η</mi><mo>⋅</mo><mfrac><mrow><mi>∂</mi><mi>L</mi></mrow><mrow><mi>∂</mi><mi>w</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">w_{\text{mới}} = w - \eta \cdot \frac{\partial L}{\partial w}</annotation></semantics></math></td>
+<td data-label="Vì sao làm vậy">Dùng dấu <strong>trừ</strong> vì phải đi <strong>ngược dấu đạo hàm</strong>: đạo hàm dương thì giảm <code>w</code>, đạo hàm âm thì tăng <code>w</code>. Nhân với <code>lr</code> nhỏ (0.01) để mỗi bước chỉ sửa một chút, tránh sửa quá tay vượt qua điểm tốt nhất.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>new_b = b - lr * db</code></td>
+<td data-label="Làm gì">Làm tương tự cho <code>b</code>.</td>
+<td data-label="Vì sao làm vậy">Cùng lý do như trên.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>return new_w, new_b</code></td>
+<td data-label="Làm gì">Trả về tham số mới.</td>
+<td data-label="Vì sao làm vậy">Để nơi gọi hàm nhận được <code>w</code>, <code>b</code> đã sửa.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Lưu ý cho người mới:</strong></p>
+<ul>
+<li>Các dòng bên trong hàm phải <strong>thụt vào 4 dấu cách</strong>. Python dựa vào thụt lề để biết dòng nào thuộc hàm nào.</li>
+<li>Chạy ô này sẽ <strong>không in ra gì</strong>, và đó là bình thường: ô chỉ <em>định nghĩa</em> hàm (giống dạy cho máy tính công thức). Hàm chỉ thực sự chạy khi được <em>gọi</em> ở các ô sau.</li>
+</ul>
+</div>
+  <div class="ref">
+    <div class="block-head"><span class="block-label">Code mẫu bước 1</span><span class="block-hint">Đọc rồi tự gõ lại vào ô bên dưới</span></div>
+    <pre class="code"><code><span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">w</span> <span class="o">+</span> <span class="n">b</span>                  <span class="c1"># dự đoán: y_hat = w*x + b</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_loss</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">y_hat</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>           <span class="c1"># loss của 1 mẫu: (y_hat - y)^2</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_gradient</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="n">dw</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_hat</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>          <span class="c1"># đạo hàm của loss theo w</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_hat</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>              <span class="c1"># đạo hàm của loss theo b</span>
+
+    <span class="k">return</span> <span class="n">dw</span><span class="p">,</span> <span class="n">db</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">update_weight</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">lr</span><span class="p">):</span>
+    <span class="n">new_w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">dw</span>               <span class="c1"># đi ngược dấu đạo hàm, bước dài lr</span>
+    <span class="n">new_b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">db</span>
+
+    <span class="k">return</span> <span class="n">new_w</span><span class="p">,</span> <span class="n">new_b</span></code></pre>
+  </div>
+  <div class="lab">
+    <div class="block-head lab-head"><label class="block-label" for="ed-1">Ô của bạn</label><span class="block-hint">Ctrl + Enter để chạy</span></div>
+    <div class="editor">
+      <div class="gutter" aria-hidden="true"></div>
+      <textarea id="ed-1" class="ed" data-step="1" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" placeholder="Gõ lại code mẫu bước 1 vào đây..."></textarea>
+    </div>
+    <div class="lab-actions">
+      <button type="button" class="btn-run" id="run-1" data-step="1" disabled>Chạy</button>
+      <button type="button" class="btn-line" id="check-1" data-step="1">Kiểm tra cách gõ</button>
+      <button type="button" class="btn-quiet" id="fill-1" data-step="1">Điền code mẫu</button>
+      <button type="button" class="btn-quiet" id="clear-1" data-step="1">Xóa</button>
+    </div>
+    <div class="result" id="res-1" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div class="out"><div class="out-head">Kết quả mong đợi</div><p class="out-note">Bước này không in ra gì. Khi bấm <strong>Chạy</strong>, trang sẽ tự kiểm tra:</p><ul class="out-list"><li><code>predict(2, 1, 1) trả về 3</code></li><li><code>compute_loss(3, 2) trả về 1</code></li><li><code>compute_gradient(3, 2, 2) trả về (4, 2)</code></li><li><code>update_weight(1, 1, 4, 2, 0.01) trả về (0.96, 0.98)</code></li></ul></div>
+</section>
+
+<section class="step" id="buoc-2" data-step="2">
+  <h2><span class="num">2</span><span>Thử 4 bước với một sinh viên</span></h2>
+  <div class="prose"><p>Lấy sinh viên 1: ôn 2 giờ, được 2 điểm. Đây là <strong>Mẫu 1</strong> trong ví dụ tính tay của bài đọc (mục II.4).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Dòng code</th>
+<th>Làm gì</th>
+<th>Vì sao làm vậy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-label="Dòng code"><code>x = 2</code> và <code>y = 2</code></td>
+<td data-label="Làm gì">Lưu dữ liệu của sinh viên 1 vào hai biến.</td>
+<td data-label="Vì sao làm vậy">Để đưa vào các hàm ở mục 1.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>b = 1</code> và <code>w = 1</code></td>
+<td data-label="Làm gì">Chọn giá trị ban đầu cho hai tham số.</td>
+<td data-label="Vì sao làm vậy">Lúc đầu ta <strong>chưa biết</strong> <code>w</code>, <code>b</code> tốt là bao nhiêu, nên chọn tạm một giá trị. Thuật toán sẽ sửa dần cho đúng.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>lr = 0.01</code></td>
+<td data-label="Làm gì">Chọn learning rate.</td>
+<td data-label="Vì sao làm vậy">Quyết định mỗi lần sửa nhiều hay ít. Chọn nhỏ để an toàn.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>y_hat = predict(x, w, b)</code></td>
+<td data-label="Làm gì">Gọi hàm <code>predict</code>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>⋅</mo><mn>2</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">1 \cdot 2 + 1 = 3</annotation></semantics></math>. Kết quả được lưu vào biến <code>y_hat</code>.</td>
+<td data-label="Vì sao làm vậy"><strong>Bước 1:</strong> phải dự đoán trước thì mới biết mô hình sai bao nhiêu.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>print(f'Prediction: {y_hat}')</code></td>
+<td data-label="Làm gì">In kết quả ra màn hình. Chữ <code>f</code> trước dấu nháy tạo <em>f-string</em>: phần trong <code>{ }</code> được thay bằng giá trị của biến.</td>
+<td data-label="Vì sao làm vậy">Để nhìn thấy và đối chiếu với kết quả tính tay.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>loss = compute_loss(y_hat, y)</code></td>
+<td data-label="Làm gì"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>3</mn><mo>−</mo><mn>2</mn><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">(3 - 2)^2 = 1</annotation></semantics></math>.</td>
+<td data-label="Vì sao làm vậy"><strong>Bước 2:</strong> đo mức độ sai.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>dw, db = compute_gradient(y_hat, y, x)</code></td>
+<td data-label="Làm gì"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mi>w</mi><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>2</mn><mo>⋅</mo><mn>1</mn><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">dw = 2 \cdot 2 \cdot 1 = 4</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mi>b</mi><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>1</mn><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">db = 2 \cdot 1 = 2</annotation></semantics></math>. Hàm trả về 2 giá trị nên bên trái dấu <code>=</code> có 2 biến.</td>
+<td data-label="Vì sao làm vậy"><strong>Bước 3:</strong> biết hướng sửa. Cả hai đều dương, nghĩa là cần <strong>giảm</strong> <code>w</code> và <code>b</code>, vì mô hình đang dự đoán cao hơn thực tế (3 &gt; 2).</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>new_w, new_b = update_weight(w, b, dw, db, lr)</code></td>
+<td data-label="Làm gì"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo>=</mo><mn>1</mn><mo>−</mo><mn>0.01</mn><mo>⋅</mo><mn>4</mn><mo>=</mo><mn>0.96</mn></mrow><annotation encoding="application/x-tex">w = 1 - 0.01 \cdot 4 = 0.96</annotation></semantics></math> và <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>1</mn><mo>−</mo><mn>0.01</mn><mo>⋅</mo><mn>2</mn><mo>=</mo><mn>0.98</mn></mrow><annotation encoding="application/x-tex">b = 1 - 0.01 \cdot 2 = 0.98</annotation></semantics></math>.</td>
+<td data-label="Vì sao làm vậy"><strong>Bước 4:</strong> sửa tham số. Ở đây cố ý lưu vào biến <strong>mới</strong> (<code>new_w</code>, <code>new_b</code>) để so sánh với giá trị cũ; <code>w</code> và <code>b</code> vẫn giữ nguyên bằng 1.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Kết quả mong đợi:</strong> Prediction 3, Loss 1, dw = 4, db = 2, w = 0.96, b = 0.98.</p>
+</div>
+  <div class="ref">
+    <div class="block-head"><span class="block-label">Code mẫu bước 2</span><span class="block-hint">Đọc rồi tự gõ lại vào ô bên dưới</span></div>
+    <pre class="code"><code><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>           <span class="c1"># số giờ ôn tập</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>           <span class="c1"># điểm thi thực tế</span>
+
+<span class="n">b</span> <span class="o">=</span> <span class="mi">1</span>           <span class="c1"># khởi tạo b</span>
+<span class="n">w</span> <span class="o">=</span> <span class="mi">1</span>           <span class="c1"># khởi tạo w</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.01</span>       <span class="c1"># learning rate</span>
+
+<span class="n">y_hat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>                         <span class="c1"># bước 1: dự đoán</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Prediction: </span><span class="si">{</span><span class="n">y_hat</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">loss</span> <span class="o">=</span> <span class="n">compute_loss</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>                    <span class="c1"># bước 2: tính loss</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Loss: </span><span class="si">{</span><span class="n">loss</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">dw</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">compute_gradient</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>           <span class="c1"># bước 3: tính đạo hàm</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Gradient: dw = </span><span class="si">{</span><span class="n">dw</span><span class="si">}</span><span class="s1">, db = </span><span class="si">{</span><span class="n">db</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="n">new_w</span><span class="p">,</span> <span class="n">new_b</span> <span class="o">=</span> <span class="n">update_weight</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span>   <span class="c1"># bước 4: cập nhật w, b</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Updated weight: w = </span><span class="si">{</span><span class="n">new_w</span><span class="si">}</span><span class="s1">, b = </span><span class="si">{</span><span class="n">new_b</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span></code></pre>
+  </div>
+  <div class="lab">
+    <div class="block-head lab-head"><label class="block-label" for="ed-2">Ô của bạn</label><span class="block-hint">Ctrl + Enter để chạy</span></div>
+    <div class="editor">
+      <div class="gutter" aria-hidden="true"></div>
+      <textarea id="ed-2" class="ed" data-step="2" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" placeholder="Gõ lại code mẫu bước 2 vào đây..."></textarea>
+    </div>
+    <div class="lab-actions">
+      <button type="button" class="btn-run" id="run-2" data-step="2" disabled>Chạy</button>
+      <button type="button" class="btn-line" id="check-2" data-step="2">Kiểm tra cách gõ</button>
+      <button type="button" class="btn-quiet" id="fill-2" data-step="2">Điền code mẫu</button>
+      <button type="button" class="btn-quiet" id="clear-2" data-step="2">Xóa</button>
+    </div>
+    <div class="result" id="res-2" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div class="out"><div class="out-head">Kết quả mong đợi</div><pre>Prediction: 3
+Loss: 1
+Gradient: dw = 4, db = 2
+Updated weight: w = 0.96, b = 0.98</pre></div>
+</section>
+
+<section class="step" id="buoc-3" data-step="3">
+  <h2><span class="num">3</span><span>Đo độ sai trên cả lớp: MAE và MSE</span></h2>
+  <div class="prose"><p>Loss ở mục 2 chỉ cho biết mô hình sai bao nhiêu với <strong>một</strong> sinh viên. Muốn biết một đường thẳng tốt hay dở, ta phải xem nó sai bao nhiêu với <strong>tất cả</strong> sinh viên, rồi gộp lại thành <strong>một con số</strong> (mục II.2 bài đọc). Có hai cách gộp phổ biến:</p>
+<ul>
+<li><strong>MAE</strong> (<em>Mean Absolute Error</em>): trung bình của <strong>trị tuyệt đối</strong> sai số, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">MAE</mtext><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup><mrow><mo stretchy="true" form="prefix">|</mo><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">|</mo></mrow></mrow><annotation encoding="application/x-tex">\text{MAE} = \frac{1}{N}\sum_{i=1}^{N}|\hat{y}_i - y_i|</annotation></semantics></math></li>
+<li><strong>MSE</strong> (<em>Mean Squared Error</em>): trung bình của <strong>bình phương</strong> sai số, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">MSE</mtext><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\text{MSE} = \frac{1}{N}\sum_{i=1}^{N}(\hat{y}_i - y_i)^2</annotation></semantics></math></li>
+</ul>
+<p>Với <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math> là số sinh viên (ở đây <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">N = 4</annotation></semantics></math>). MAE và MSE <strong>càng nhỏ</strong> thì đường thẳng càng tốt.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Dòng code</th>
+<th>Làm gì</th>
+<th>Vì sao làm vậy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-label="Dòng code"><code>X = [2, 3, 5, 6]</code></td>
+<td data-label="Làm gì">Tạo một danh sách (<em>list</em>) chứa số giờ ôn của 4 sinh viên.</td>
+<td data-label="Vì sao làm vậy">Cần cả bộ dữ liệu để đo trên cả lớp. Viết hoa <code>X</code> để phân biệt với <code>x</code> viết thường (chỉ là một số).</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>Y = [2, 3.5, 4, 6]</code></td>
+<td data-label="Làm gì">Điểm thật của 4 sinh viên, theo đúng thứ tự: <code>Y[0]</code> đi cặp với <code>X[0]</code>, <code>Y[1]</code> với <code>X[1]</code>,…</td>
+<td data-label="Vì sao làm vậy">Thứ tự phải khớp nhau, nếu không sẽ ghép nhầm điểm của sinh viên này với số giờ của sinh viên khác.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>def compute_mae(X, Y, w, b):</code></td>
+<td data-label="Làm gì">Hàm tính MAE của đường thẳng có tham số <code>w</code>, <code>b</code> trên dữ liệu <code>X</code>, <code>Y</code>.</td>
+<td data-label="Vì sao làm vậy">Truyền <code>w</code>, <code>b</code> vào để đo được <strong>bất kỳ</strong> đường thẳng nào: trước huấn luyện, sau huấn luyện, hay đường trong bài đọc.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>total = 0</code></td>
+<td data-label="Làm gì">Tạo biến tổng, bắt đầu bằng 0.</td>
+<td data-label="Vì sao làm vậy">Giống như tính tổng bằng tay: bắt đầu từ 0, rồi cộng dần từng số vào.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>for idx in range(len(X)):</code></td>
+<td data-label="Làm gì"><code>len(X)</code> là 4, nên <code>range(4)</code> cho <code>idx</code> lần lượt bằng 0, 1, 2, 3.</td>
+<td data-label="Vì sao làm vậy">Để lặp qua <strong>từng</strong> sinh viên. Python đánh số từ 0, nên sinh viên 1 có <code>idx = 0</code>.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>y_hat = predict(X[idx], w, b)</code></td>
+<td data-label="Làm gì"><code>X[idx]</code> lấy số giờ của sinh viên thứ <code>idx</code>, rồi dự đoán điểm cho sinh viên đó.</td>
+<td data-label="Vì sao làm vậy">Phải có dự đoán mới tính được sai số. Dùng lại hàm <code>predict</code> ở mục 1.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>total = total + abs(y_hat - Y[idx])</code></td>
+<td data-label="Làm gì">Cộng thêm <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">|</mo><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo>−</mo><mi>y</mi><mo stretchy="true" form="postfix">|</mo></mrow><annotation encoding="application/x-tex">|\hat{y} - y|</annotation></semantics></math> của sinh viên này vào tổng. <code>abs</code> là hàm lấy trị tuyệt đối.</td>
+<td data-label="Vì sao làm vậy">Lấy trị tuyệt đối để sai số âm (dự đoán thấp) không triệt tiêu sai số dương (dự đoán cao). Dòng này nằm <strong>bên trong</strong> <code>for</code> nên được chạy 4 lần.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>return total / len(X)</code></td>
+<td data-label="Làm gì">Chia tổng cho 4 để lấy trung bình, rồi trả kết quả.</td>
+<td data-label="Vì sao làm vậy">Lấy trung bình để con số không phụ thuộc vào số sinh viên. Dòng này thụt lề <strong>bằng</strong> dòng <code>for</code> (không nằm trong vòng lặp) nên chỉ chạy <strong>một lần</strong>, sau khi đã cộng xong cả 4 sinh viên.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>def compute_mse(X, Y, w, b):</code> …</td>
+<td data-label="Làm gì">Giống hệt <code>compute_mae</code>, chỉ khác dòng cộng dồn: <code>total = total + (y_hat - Y[idx]) ** 2</code>.</td>
+<td data-label="Vì sao làm vậy">Dùng bình phương thay cho trị tuyệt đối nên sai số lớn bị phạt nặng hơn. Để ý: MSE chính là <strong>trung bình của loss</strong> (<code>compute_loss</code>) trên tất cả sinh viên.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Lỗi hay gặp:</strong> nếu lỡ thụt <code>return</code> vào trong vòng <code>for</code>, hàm sẽ trả kết quả ngay sau sinh viên đầu tiên và cho số sai.</p>
+<p>Ô này cũng chỉ định nghĩa dữ liệu và hàm nên <strong>không in ra gì</strong>.</p>
+</div>
+  <div class="ref">
+    <div class="block-head"><span class="block-label">Code mẫu bước 3</span><span class="block-hint">Đọc rồi tự gõ lại vào ô bên dưới</span></div>
+    <pre class="code"><code><span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>        <span class="c1"># số giờ ôn tập của 4 sinh viên</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>      <span class="c1"># điểm thi thực tế của 4 sinh viên</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_mae</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>                                    <span class="c1"># tổng, bắt đầu từ 0</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>                    <span class="c1"># lặp qua từng sinh viên</span>
+        <span class="n">y_hat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>            <span class="c1"># dự đoán cho sinh viên idx</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">total</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_hat</span> <span class="o">-</span> <span class="n">Y</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>      <span class="c1"># cộng |sai số|</span>
+    <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>                        <span class="c1"># chia số sinh viên -&gt; trung bình</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_mse</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>
+        <span class="n">y_hat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">total</span> <span class="o">+</span> <span class="p">(</span><span class="n">y_hat</span> <span class="o">-</span> <span class="n">Y</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>    <span class="c1"># cộng (sai số)^2</span>
+    <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></code></pre>
+  </div>
+  <div class="lab">
+    <div class="block-head lab-head"><label class="block-label" for="ed-3">Ô của bạn</label><span class="block-hint">Ctrl + Enter để chạy</span></div>
+    <div class="editor">
+      <div class="gutter" aria-hidden="true"></div>
+      <textarea id="ed-3" class="ed" data-step="3" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" placeholder="Gõ lại code mẫu bước 3 vào đây..."></textarea>
+    </div>
+    <div class="lab-actions">
+      <button type="button" class="btn-run" id="run-3" data-step="3" disabled>Chạy</button>
+      <button type="button" class="btn-line" id="check-3" data-step="3">Kiểm tra cách gõ</button>
+      <button type="button" class="btn-quiet" id="fill-3" data-step="3">Điền code mẫu</button>
+      <button type="button" class="btn-quiet" id="clear-3" data-step="3">Xóa</button>
+    </div>
+    <div class="result" id="res-3" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div class="out"><div class="out-head">Kết quả mong đợi</div><p class="out-note">Bước này không in ra gì. Khi bấm <strong>Chạy</strong>, trang sẽ tự kiểm tra:</p><ul class="out-list"><li><code>X = [2, 3, 5, 6] và Y = [2, 3.5, 4, 6]</code></li><li><code>compute_mae(X, Y, 1, 1) trả về 1.125</code></li><li><code>compute_mse(X, Y, 1, 1) trả về 1.5625</code></li></ul></div>
+</section>
+
+<section class="step" id="buoc-4" data-step="4">
+  <h2><span class="num">4</span><span>Mô hình chưa huấn luyện sai bao nhiêu?</span></h2>
+  <div class="prose"><p>Dùng hai hàm vừa viết để đo đường thẳng ban đầu (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">w = 1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">b = 1</annotation></semantics></math>). Để kiểm tra hàm viết đúng chưa, đo thêm <strong>mô hình B</strong> trong bài đọc (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo>=</mo><mn>0.9</mn><mi>x</mi><mo>+</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\hat{y} = 0.9x + 0.3</annotation></semantics></math>, Bảng 5 và Bảng 6).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Dòng code</th>
+<th>Làm gì</th>
+<th>Vì sao làm vậy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-label="Dòng code"><code>w = 1</code> và <code>b = 1</code></td>
+<td data-label="Làm gì">Đặt lại tham số về giá trị ban đầu.</td>
+<td data-label="Vì sao làm vậy">Để chắc chắn đang đo đúng mô hình <strong>chưa huấn luyện</strong>.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>print(f'Mô hình chưa huấn luyện ...')</code></td>
+<td data-label="Làm gì">In tiêu đề.</td>
+<td data-label="Vì sao làm vậy">Để kết quả dễ đọc.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>print(f'  MAE = {compute_mae(X, Y, w, b):.4f}')</code></td>
+<td data-label="Làm gì">Gọi hàm <code>compute_mae</code> ngay trong <code>{ }</code> và in kết quả. <code>:.4f</code> nghĩa là in 4 chữ số sau dấu chấm.</td>
+<td data-label="Vì sao làm vậy">Làm tròn cho gọn; máy tính lưu số thực có thể dài như <code>1.12500000001</code>.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>print(f'  MSE = {compute_mse(X, Y, w, b):.4f}')</code></td>
+<td data-label="Làm gì">Tương tự cho MSE.</td>
+<td data-label="Vì sao làm vậy"></td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code">Ba dòng <code>print</code> cho mô hình B</td>
+<td data-label="Làm gì">Truyền thẳng <code>0.9</code>, <code>0.3</code> vào hàm thay vì dùng biến <code>w</code>, <code>b</code>.</td>
+<td data-label="Vì sao làm vậy">Để <strong>kiểm tra</strong> hàm: nếu ra đúng số trong bài đọc thì hàm viết đúng. Đây là thói quen tốt khi lập trình: thử với một trường hợp đã biết đáp án.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Kết quả mong đợi:</strong> mô hình chưa huấn luyện có MAE = 1.1250, MSE = 1.5625. Mô hình B có MAE = 0.4250, MSE = 0.2475, đúng như bài đọc. Mô hình B có cả hai số đều nhỏ hơn, nghĩa là B tốt hơn. <strong>Mục tiêu của huấn luyện là làm cho MSE nhỏ đi.</strong></p>
+</div>
+  <div class="ref">
+    <div class="block-head"><span class="block-label">Code mẫu bước 4</span><span class="block-hint">Đọc rồi tự gõ lại vào ô bên dưới</span></div>
+    <pre class="code"><code><span class="n">w</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">b</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Mô hình chưa huấn luyện (w = </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1">, b = </span><span class="si">{</span><span class="n">b</span><span class="si">}</span><span class="s1">):'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'  MAE = </span><span class="si">{</span><span class="n">compute_mae</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'  MSE = </span><span class="si">{</span><span class="n">compute_mse</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Mô hình B trong bài đọc (w = 0.9, b = 0.3):'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'  MAE = </span><span class="si">{</span><span class="n">compute_mae</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'  MSE = </span><span class="si">{</span><span class="n">compute_mse</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span><span class="w"> </span><span class="mf">0.3</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span></code></pre>
+  </div>
+  <div class="lab">
+    <div class="block-head lab-head"><label class="block-label" for="ed-4">Ô của bạn</label><span class="block-hint">Ctrl + Enter để chạy</span></div>
+    <div class="editor">
+      <div class="gutter" aria-hidden="true"></div>
+      <textarea id="ed-4" class="ed" data-step="4" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" placeholder="Gõ lại code mẫu bước 4 vào đây..."></textarea>
+    </div>
+    <div class="lab-actions">
+      <button type="button" class="btn-run" id="run-4" data-step="4" disabled>Chạy</button>
+      <button type="button" class="btn-line" id="check-4" data-step="4">Kiểm tra cách gõ</button>
+      <button type="button" class="btn-quiet" id="fill-4" data-step="4">Điền code mẫu</button>
+      <button type="button" class="btn-quiet" id="clear-4" data-step="4">Xóa</button>
+    </div>
+    <div class="result" id="res-4" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div class="out"><div class="out-head">Kết quả mong đợi</div><pre>Mô hình chưa huấn luyện (w = 1, b = 1):
+  MAE = 1.1250
+  MSE = 1.5625
+Mô hình B trong bài đọc (w = 0.9, b = 0.3):
+  MAE = 0.4250
+  MSE = 0.2475</pre></div>
+</section>
+
+<section class="step" id="buoc-5" data-step="5">
+  <h2><span class="num">5</span><span>Huấn luyện trên cả 4 sinh viên</span></h2>
+  <div class="prose"><p>Lặp lại 4 bước ở mục 2 cho <strong>từng</strong> sinh viên, và lặp lại cả lớp nhiều lần. Mỗi lần duyệt hết 4 sinh viên gọi là <strong>một epoch</strong>. Sau mỗi epoch, ta in MAE và MSE của cả lớp để xem mô hình có tốt lên không.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Dòng code</th>
+<th>Làm gì</th>
+<th>Vì sao làm vậy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-label="Dòng code"><code>epochs = 5</code></td>
+<td data-label="Làm gì">Số lần duyệt hết cả lớp.</td>
+<td data-label="Vì sao làm vậy">Một lần chưa đủ để học tốt; lặp nhiều lần để <code>w</code>, <code>b</code> được sửa dần.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>w = 1</code>, <code>b = 1</code>, <code>lr = 0.01</code></td>
+<td data-label="Làm gì">Khởi tạo lại như mục 2.</td>
+<td data-label="Vì sao làm vậy">Để huấn luyện bắt đầu từ cùng điểm xuất phát với ví dụ tính tay trong bài đọc.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>for epoch in range(epochs):</code></td>
+<td data-label="Làm gì"><strong>Vòng lặp ngoài</strong>: <code>epoch</code> = 0, 1, 2, 3, 4.</td>
+<td data-label="Vì sao làm vậy">Mỗi vòng là một epoch.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>for idx in range(len(X)):</code></td>
+<td data-label="Làm gì"><strong>Vòng lặp trong</strong>: <code>idx</code> = 0, 1, 2, 3. Thụt vào 4 dấu cách so với vòng ngoài.</td>
+<td data-label="Vì sao làm vậy">Trong mỗi epoch, đi qua từng sinh viên một. Tổng cộng có 5 × 4 = 20 lần sửa tham số.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>x = X[idx]</code> và <code>y = Y[idx]</code></td>
+<td data-label="Làm gì">Lấy dữ liệu của sinh viên thứ <code>idx</code>.</td>
+<td data-label="Vì sao làm vậy">Để 4 dòng tiếp theo viết giống hệt mục 2, dễ đối chiếu.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>y_hat = predict(x, w, b)</code></td>
+<td data-label="Làm gì">Bước 1: dự đoán.</td>
+<td data-label="Vì sao làm vậy">Giống mục 2.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>loss = compute_loss(y_hat, y)</code></td>
+<td data-label="Làm gì">Bước 2: loss của <strong>sinh viên này</strong>.</td>
+<td data-label="Vì sao làm vậy">Để in ra theo dõi.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>dw, db = compute_gradient(y_hat, y, x)</code></td>
+<td data-label="Làm gì">Bước 3: đạo hàm.</td>
+<td data-label="Vì sao làm vậy">Giống mục 2.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>w, b = update_weight(w, b, dw, db, lr)</code></td>
+<td data-label="Làm gì">Bước 4: cập nhật, và <strong>gán đè vào chính <code>w</code>, <code>b</code></strong>.</td>
+<td data-label="Vì sao làm vậy"><strong>Khác mục 2:</strong> ở đây muốn sinh viên tiếp theo dùng <code>w</code>, <code>b</code> <strong>đã sửa</strong>, nên phải ghi đè lên biến cũ. Nếu lưu vào <code>new_w</code>, <code>new_b</code> thì <code>w</code>, <code>b</code> không bao giờ thay đổi và mô hình không học được gì.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>print(f'Epoch {epoch + 1}, mẫu ...')</code></td>
+<td data-label="Làm gì">In kết quả sau mỗi lần sửa. Dùng <code>epoch + 1</code> để đếm từ 1 cho dễ đọc.</td>
+<td data-label="Vì sao làm vậy">Để theo dõi <code>w</code>, <code>b</code> thay đổi thế nào. 4 dòng đầu tiên khớp <strong>Bảng 8</strong> trong bài đọc.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>mse = compute_mse(X, Y, w, b)</code></td>
+<td data-label="Làm gì">Tính MSE của cả lớp với <code>w</code>, <code>b</code> hiện tại.</td>
+<td data-label="Vì sao làm vậy">Dòng này thụt lề <strong>ngang với</strong> vòng <code>for idx</code> (không nằm bên trong nó), nên chỉ chạy <strong>một lần sau mỗi epoch</strong>, khi đã đi hết 4 sinh viên.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>mae = compute_mae(X, Y, w, b)</code></td>
+<td data-label="Làm gì">Tương tự cho MAE.</td>
+<td data-label="Vì sao làm vậy"></td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>print(f'==&gt; Hết epoch ...')</code></td>
+<td data-label="Làm gì">In MAE, MSE sau mỗi epoch.</td>
+<td data-label="Vì sao làm vậy">Đây là con số quan trọng nhất: cho biết <strong>cả mô hình</strong> có tốt lên không.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>print()</code></td>
+<td data-label="Làm gì">In một dòng trống.</td>
+<td data-label="Vì sao làm vậy">Để tách các epoch cho dễ nhìn.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Phân biệt Loss và MSE:</strong> cột <code>Loss</code> là sai số của <strong>một</strong> sinh viên nên tăng giảm thất thường (sinh viên này dễ đoán, sinh viên kia khó đoán). Còn <strong>MSE</strong> là sai số trung bình của <strong>cả lớp</strong>, nên mới là thước đo để xem mô hình có học được không.</p>
+<p><strong>Kết quả mong đợi:</strong> sau epoch 1, MSE giảm từ 1.5625 xuống 0.3768 (giống bài đọc), rồi tiếp tục giảm dần: 0.3323, 0.3274, 0.3255, 0.3240.</p>
+<p><strong>Vì sao MAE lại tăng nhẹ ở epoch 2 (0.4633 → 0.4707)?</strong> Vì mô hình được huấn luyện để làm nhỏ <strong>loss bình phương</strong>, tức là MSE, chứ không phải MAE. Thước đo được tối ưu là MSE thì giảm đều qua mọi epoch; MAE chỉ là thước đo “tham khảo thêm” nên có thể tăng giảm một chút.</p>
+</div>
+  <div class="ref">
+    <div class="block-head"><span class="block-label">Code mẫu bước 5</span><span class="block-hint">Đọc rồi tự gõ lại vào ô bên dưới</span></div>
+    <pre class="code"><code><span class="n">epochs</span> <span class="o">=</span> <span class="mi">5</span>              <span class="c1"># số lần duyệt hết cả lớp</span>
+
+<span class="n">w</span> <span class="o">=</span> <span class="mi">1</span>                   <span class="c1"># khởi tạo lại w, b, lr như mục 2</span>
+<span class="n">b</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>                      <span class="c1"># vòng ngoài: lặp qua từng epoch</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>                    <span class="c1"># vòng trong: lặp qua từng sinh viên</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="n">y_hat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>                 <span class="c1"># 1. dự đoán</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">compute_loss</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>            <span class="c1"># 2. tính loss của sinh viên này</span>
+        <span class="n">dw</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">compute_gradient</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>   <span class="c1"># 3. tính đạo hàm</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">update_weight</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span>   <span class="c1"># 4. cập nhật, ghi đè lên w, b</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, mẫu (</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s1">): Loss = </span><span class="si">{</span><span class="n">loss</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">, w = </span><span class="si">{</span><span class="n">w</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">, b = </span><span class="si">{</span><span class="n">b</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+    <span class="n">mse</span> <span class="o">=</span> <span class="n">compute_mse</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>                <span class="c1"># đo cả lớp sau mỗi epoch</span>
+    <span class="n">mae</span> <span class="o">=</span> <span class="n">compute_mae</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'==&gt; Hết epoch </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">: MSE = </span><span class="si">{</span><span class="n">mse</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">, MAE = </span><span class="si">{</span><span class="n">mae</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span></code></pre>
+  </div>
+  <div class="lab">
+    <div class="block-head lab-head"><label class="block-label" for="ed-5">Ô của bạn</label><span class="block-hint">Ctrl + Enter để chạy</span></div>
+    <div class="editor">
+      <div class="gutter" aria-hidden="true"></div>
+      <textarea id="ed-5" class="ed" data-step="5" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" placeholder="Gõ lại code mẫu bước 5 vào đây..."></textarea>
+    </div>
+    <div class="lab-actions">
+      <button type="button" class="btn-run" id="run-5" data-step="5" disabled>Chạy</button>
+      <button type="button" class="btn-line" id="check-5" data-step="5">Kiểm tra cách gõ</button>
+      <button type="button" class="btn-quiet" id="fill-5" data-step="5">Điền code mẫu</button>
+      <button type="button" class="btn-quiet" id="clear-5" data-step="5">Xóa</button>
+    </div>
+    <div class="result" id="res-5" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div class="out"><div class="out-head">Kết quả mong đợi</div><pre>Epoch 1, mẫu (2, 2): Loss = 1.0000, w = 0.9600, b = 0.9800
+Epoch 1, mẫu (3, 3.5): Loss = 0.1296, w = 0.9384, b = 0.9728
+Epoch 1, mẫu (5, 4): Loss = 2.7716, w = 0.7719, b = 0.9395
+Epoch 1, mẫu (6, 6): Loss = 0.1840, w = 0.8234, b = 0.9481
+==&gt; Hết epoch 1: MSE = 0.3768, MAE = 0.4633
+
+Epoch 2, mẫu (2, 2): Loss = 0.3539, w = 0.7996, b = 0.9362
+Epoch 2, mẫu (3, 3.5): Loss = 0.0272, w = 0.8095, b = 0.9395
+Epoch 2, mẫu (5, 4): Loss = 0.9742, w = 0.7108, b = 0.9197
+Epoch 2, mẫu (6, 6): Loss = 0.6649, w = 0.8087, b = 0.9361
+==&gt; Hết epoch 2: MSE = 0.3323, MAE = 0.4707
+
+Epoch 3, mẫu (2, 2): Loss = 0.3062, w = 0.7865, b = 0.9250
+Epoch 3, mẫu (3, 3.5): Loss = 0.0464, w = 0.7994, b = 0.9293
+Epoch 3, mẫu (5, 4): Loss = 0.8585, w = 0.7068, b = 0.9108
+Epoch 3, mẫu (6, 6): Loss = 0.7199, w = 0.8086, b = 0.9277
+==&gt; Hết epoch 3: MSE = 0.3274, MAE = 0.4707
+
+Epoch 4, mẫu (2, 2): Loss = 0.2970, w = 0.7868, b = 0.9168
+Epoch 4, mẫu (3, 3.5): Loss = 0.0496, w = 0.8002, b = 0.9213
+Epoch 4, mẫu (5, 4): Loss = 0.8504, w = 0.7080, b = 0.9028
+Epoch 4, mẫu (6, 6): Loss = 0.7215, w = 0.8099, b = 0.9198
+==&gt; Hết epoch 4: MSE = 0.3255, MAE = 0.4701
+
+Epoch 5, mẫu (2, 2): Loss = 0.2912, w = 0.7883, b = 0.9090
+Epoch 5, mẫu (3, 3.5): Loss = 0.0511, w = 0.8019, b = 0.9136
+Epoch 5, mẫu (5, 4): Loss = 0.8517, w = 0.7096, b = 0.8951
+Epoch 5, mẫu (6, 6): Loss = 0.7181, w = 0.8113, b = 0.9121
+==&gt; Hết epoch 5: MSE = 0.3240, MAE = 0.4694</pre></div>
+</section>
+
+<section class="step" id="buoc-6" data-step="6">
+  <h2><span class="num">6</span><span>Sau khi huấn luyện</span></h2>
+  <div class="prose"><p>So sánh MAE, MSE trước và sau khi huấn luyện, rồi trả lời câu hỏi của bài: <strong>sinh viên ôn 6.5 giờ được bao nhiêu điểm?</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr class="header">
+<th>Dòng code</th>
+<th>Làm gì</th>
+<th>Vì sao làm vậy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-label="Dòng code"><code>print(f'Sau huấn luyện: w = {w:.4f}, b = {b:.4f}')</code></td>
+<td data-label="Làm gì">In <code>w</code>, <code>b</code> hiện tại, tức là kết quả sau 5 epoch ở mục 5.</td>
+<td data-label="Vì sao làm vậy">Để biết đường thẳng cuối cùng là gì.</td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>print(f'MAE: {compute_mae(X, Y, 1, 1):.4f} (trước) -&gt; {compute_mae(X, Y, w, b):.4f} (sau)')</code></td>
+<td data-label="Làm gì">Tính MAE hai lần: với <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo>=</mo><mi>b</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">w = b = 1</annotation></semantics></math> (trước huấn luyện) và với <code>w</code>, <code>b</code> hiện tại (sau huấn luyện).</td>
+<td data-label="Vì sao làm vậy">Đặt hai con số cạnh nhau để thấy rõ mô hình đã tốt lên bao nhiêu.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code">Dòng <code>print</code> tương tự cho MSE</td>
+<td data-label="Làm gì">Như trên, cho MSE.</td>
+<td data-label="Vì sao làm vậy"></td>
+</tr>
+<tr class="even">
+<td data-label="Dòng code"><code>y_hat = predict(6.5, w, b)</code></td>
+<td data-label="Làm gì">Dự đoán cho sinh viên mới ôn 6.5 giờ.</td>
+<td data-label="Vì sao làm vậy">Đây là <strong>mục đích cuối cùng</strong>: dùng mô hình đã học để dự đoán cho người chưa có trong dữ liệu.</td>
+</tr>
+<tr class="odd">
+<td data-label="Dòng code"><code>print(f'Dự đoán ...: {y_hat:.2f} điểm')</code></td>
+<td data-label="Làm gì">In kết quả, làm tròn 2 chữ số.</td>
+<td data-label="Vì sao làm vậy"></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Kết quả mong đợi:</strong> MAE giảm từ 1.1250 xuống 0.4694, MSE giảm từ 1.5625 xuống 0.3240; dự đoán cho 6.5 giờ khoảng 6.19 điểm.</p>
+<p><strong>Thử thêm:</strong> quay lại mục 5, đổi <code>epochs = 5</code> thành <code>50</code> hoặc <code>500</code>, hoặc đổi <code>lr = 0.01</code> thành <code>0.001</code>, rồi chạy lại mục 5 và mục 6. MSE thay đổi thế nào? (Bài đọc giải thích ở mục II.5: đường thẳng tốt nhất có MSE ≈ 0.2406 và dự đoán 6.0 điểm cho 6.5 giờ.)</p>
+</div>
+  <div class="ref">
+    <div class="block-head"><span class="block-label">Code mẫu bước 6</span><span class="block-hint">Đọc rồi tự gõ lại vào ô bên dưới</span></div>
+    <pre class="code"><code><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Sau huấn luyện: w = </span><span class="si">{</span><span class="n">w</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">, b = </span><span class="si">{</span><span class="n">b</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'MAE: </span><span class="si">{</span><span class="n">compute_mae</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> (trước) -&gt; </span><span class="si">{</span><span class="n">compute_mae</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> (sau)'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'MSE: </span><span class="si">{</span><span class="n">compute_mse</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> (trước) -&gt; </span><span class="si">{</span><span class="n">compute_mse</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">,</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> (sau)'</span><span class="p">)</span>
+
+<span class="n">y_hat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="mf">6.5</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Dự đoán cho sinh viên ôn 6.5 giờ: </span><span class="si">{</span><span class="n">y_hat</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> điểm'</span><span class="p">)</span></code></pre>
+  </div>
+  <div class="lab">
+    <div class="block-head lab-head"><label class="block-label" for="ed-6">Ô của bạn</label><span class="block-hint">Ctrl + Enter để chạy</span></div>
+    <div class="editor">
+      <div class="gutter" aria-hidden="true"></div>
+      <textarea id="ed-6" class="ed" data-step="6" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" placeholder="Gõ lại code mẫu bước 6 vào đây..."></textarea>
+    </div>
+    <div class="lab-actions">
+      <button type="button" class="btn-run" id="run-6" data-step="6" disabled>Chạy</button>
+      <button type="button" class="btn-line" id="check-6" data-step="6">Kiểm tra cách gõ</button>
+      <button type="button" class="btn-quiet" id="fill-6" data-step="6">Điền code mẫu</button>
+      <button type="button" class="btn-quiet" id="clear-6" data-step="6">Xóa</button>
+    </div>
+    <div class="result" id="res-6" role="status" aria-live="polite" hidden></div>
+  </div>
+  <div class="out"><div class="out-head">Kết quả mong đợi</div><pre>Sau huấn luyện: w = 0.8113, b = 0.9121
+MAE: 1.1250 (trước) -&gt; 0.4694 (sau)
+MSE: 1.5625 (trước) -&gt; 0.3240 (sau)
+Dự đoán cho sinh viên ôn 6.5 giờ: 6.19 điểm</pre></div>
+</section>
+
+  <footer>Trang đi kèm bài đọc <em>Step-by-Step: Simple Linear Regression</em>. Các số Hình, Bảng và mục được nhắc tới ở trên là của bài đọc đó. Code bạn gõ được lưu tạm trên trình duyệt này để không mất khi tải lại trang.</footer>
+</main>
+
+<script type="application/json" id="steps-data">{"steps": {"1": {"title": "Bốn hàm cơ bản", "ref": "def predict(x, w, b):\n    return x * w + b                  # dự đoán: y_hat = w*x + b\n\ndef compute_loss(y_hat, y):\n    return (y_hat - y) ** 2           # loss của 1 mẫu: (y_hat - y)^2\n\ndef compute_gradient(y_hat, y, x):\n    dw = 2 * x * (y_hat - y)          # đạo hàm của loss theo w\n    db = 2 * (y_hat - y)              # đạo hàm của loss theo b\n\n    return dw, db\n\ndef update_weight(w, b, dw, db, lr):\n    new_w = w - lr * dw               # đi ngược dấu đạo hàm, bước dài lr\n    new_b = b - lr * db\n\n    return new_w, new_b", "out": "", "checks": [["predict(2, 1, 1) trả về 3", "predict(2, 1, 1) == 3"], ["compute_loss(3, 2) trả về 1", "compute_loss(3, 2) == 1"], ["compute_gradient(3, 2, 2) trả về (4, 2)", "tuple(compute_gradient(3, 2, 2)) == (4, 2)"], ["update_weight(1, 1, 4, 2, 0.01) trả về (0.96, 0.98)", "all(abs(a - c) < 1e-9 for a, c in zip(update_weight(1, 1, 4, 2, 0.01), (0.96, 0.98)))"]]}, "2": {"title": "Thử 4 bước với một sinh viên", "ref": "x = 2           # số giờ ôn tập\ny = 2           # điểm thi thực tế\n\nb = 1           # khởi tạo b\nw = 1           # khởi tạo w\nlr = 0.01       # learning rate\n\ny_hat = predict(x, w, b)                         # bước 1: dự đoán\nprint(f'Prediction: {y_hat}')\n\nloss = compute_loss(y_hat, y)                    # bước 2: tính loss\nprint(f'Loss: {loss}')\n\ndw, db = compute_gradient(y_hat, y, x)           # bước 3: tính đạo hàm\nprint(f'Gradient: dw = {dw}, db = {db}')\n\nnew_w, new_b = update_weight(w, b, dw, db, lr)   # bước 4: cập nhật w, b\nprint(f'Updated weight: w = {new_w}, b = {new_b}')", "out": "Prediction: 3\nLoss: 1\nGradient: dw = 4, db = 2\nUpdated weight: w = 0.96, b = 0.98", "checks": []}, "3": {"title": "Đo độ sai trên cả lớp: MAE và MSE", "ref": "X = [2, 3, 5, 6]        # số giờ ôn tập của 4 sinh viên\nY = [2, 3.5, 4, 6]      # điểm thi thực tế của 4 sinh viên\n\ndef compute_mae(X, Y, w, b):\n    total = 0                                    # tổng, bắt đầu từ 0\n    for idx in range(len(X)):                    # lặp qua từng sinh viên\n        y_hat = predict(X[idx], w, b)            # dự đoán cho sinh viên idx\n        total = total + abs(y_hat - Y[idx])      # cộng |sai số|\n    return total / len(X)                        # chia số sinh viên -> trung bình\n\ndef compute_mse(X, Y, w, b):\n    total = 0\n    for idx in range(len(X)):\n        y_hat = predict(X[idx], w, b)\n        total = total + (y_hat - Y[idx]) ** 2    # cộng (sai số)^2\n    return total / len(X)", "out": "", "checks": [["X = [2, 3, 5, 6] và Y = [2, 3.5, 4, 6]", "X == [2, 3, 5, 6] and Y == [2, 3.5, 4, 6]"], ["compute_mae(X, Y, 1, 1) trả về 1.125", "abs(compute_mae(X, Y, 1, 1) - 1.125) < 1e-9"], ["compute_mse(X, Y, 1, 1) trả về 1.5625", "abs(compute_mse(X, Y, 1, 1) - 1.5625) < 1e-9"]]}, "4": {"title": "Mô hình chưa huấn luyện sai bao nhiêu?", "ref": "w = 1\nb = 1\n\nprint(f'Mô hình chưa huấn luyện (w = {w}, b = {b}):')\nprint(f'  MAE = {compute_mae(X, Y, w, b):.4f}')\nprint(f'  MSE = {compute_mse(X, Y, w, b):.4f}')\n\nprint('Mô hình B trong bài đọc (w = 0.9, b = 0.3):')\nprint(f'  MAE = {compute_mae(X, Y, 0.9, 0.3):.4f}')\nprint(f'  MSE = {compute_mse(X, Y, 0.9, 0.3):.4f}')", "out": "Mô hình chưa huấn luyện (w = 1, b = 1):\n  MAE = 1.1250\n  MSE = 1.5625\nMô hình B trong bài đọc (w = 0.9, b = 0.3):\n  MAE = 0.4250\n  MSE = 0.2475", "checks": []}, "5": {"title": "Huấn luyện trên cả 4 sinh viên", "ref": "epochs = 5              # số lần duyệt hết cả lớp\n\nw = 1                   # khởi tạo lại w, b, lr như mục 2\nb = 1\nlr = 0.01\n\nfor epoch in range(epochs):                      # vòng ngoài: lặp qua từng epoch\n    for idx in range(len(X)):                    # vòng trong: lặp qua từng sinh viên\n        x = X[idx]\n        y = Y[idx]\n\n        y_hat = predict(x, w, b)                 # 1. dự đoán\n        loss = compute_loss(y_hat, y)            # 2. tính loss của sinh viên này\n        dw, db = compute_gradient(y_hat, y, x)   # 3. tính đạo hàm\n        w, b = update_weight(w, b, dw, db, lr)   # 4. cập nhật, ghi đè lên w, b\n\n        print(f'Epoch {epoch + 1}, mẫu ({x}, {y}): Loss = {loss:.4f}, w = {w:.4f}, b = {b:.4f}')\n\n    mse = compute_mse(X, Y, w, b)                # đo cả lớp sau mỗi epoch\n    mae = compute_mae(X, Y, w, b)\n    print(f'==> Hết epoch {epoch + 1}: MSE = {mse:.4f}, MAE = {mae:.4f}')\n    print()", "out": "Epoch 1, mẫu (2, 2): Loss = 1.0000, w = 0.9600, b = 0.9800\nEpoch 1, mẫu (3, 3.5): Loss = 0.1296, w = 0.9384, b = 0.9728\nEpoch 1, mẫu (5, 4): Loss = 2.7716, w = 0.7719, b = 0.9395\nEpoch 1, mẫu (6, 6): Loss = 0.1840, w = 0.8234, b = 0.9481\n==> Hết epoch 1: MSE = 0.3768, MAE = 0.4633\n\nEpoch 2, mẫu (2, 2): Loss = 0.3539, w = 0.7996, b = 0.9362\nEpoch 2, mẫu (3, 3.5): Loss = 0.0272, w = 0.8095, b = 0.9395\nEpoch 2, mẫu (5, 4): Loss = 0.9742, w = 0.7108, b = 0.9197\nEpoch 2, mẫu (6, 6): Loss = 0.6649, w = 0.8087, b = 0.9361\n==> Hết epoch 2: MSE = 0.3323, MAE = 0.4707\n\nEpoch 3, mẫu (2, 2): Loss = 0.3062, w = 0.7865, b = 0.9250\nEpoch 3, mẫu (3, 3.5): Loss = 0.0464, w = 0.7994, b = 0.9293\nEpoch 3, mẫu (5, 4): Loss = 0.8585, w = 0.7068, b = 0.9108\nEpoch 3, mẫu (6, 6): Loss = 0.7199, w = 0.8086, b = 0.9277\n==> Hết epoch 3: MSE = 0.3274, MAE = 0.4707\n\nEpoch 4, mẫu (2, 2): Loss = 0.2970, w = 0.7868, b = 0.9168\nEpoch 4, mẫu (3, 3.5): Loss = 0.0496, w = 0.8002, b = 0.9213\nEpoch 4, mẫu (5, 4): Loss = 0.8504, w = 0.7080, b = 0.9028\nEpoch 4, mẫu (6, 6): Loss = 0.7215, w = 0.8099, b = 0.9198\n==> Hết epoch 4: MSE = 0.3255, MAE = 0.4701\n\nEpoch 5, mẫu (2, 2): Loss = 0.2912, w = 0.7883, b = 0.9090\nEpoch 5, mẫu (3, 3.5): Loss = 0.0511, w = 0.8019, b = 0.9136\nEpoch 5, mẫu (5, 4): Loss = 0.8517, w = 0.7096, b = 0.8951\nEpoch 5, mẫu (6, 6): Loss = 0.7181, w = 0.8113, b = 0.9121\n==> Hết epoch 5: MSE = 0.3240, MAE = 0.4694", "checks": []}, "6": {"title": "Sau khi huấn luyện", "ref": "print(f'Sau huấn luyện: w = {w:.4f}, b = {b:.4f}')\nprint(f'MAE: {compute_mae(X, Y, 1, 1):.4f} (trước) -> {compute_mae(X, Y, w, b):.4f} (sau)')\nprint(f'MSE: {compute_mse(X, Y, 1, 1):.4f} (trước) -> {compute_mse(X, Y, w, b):.4f} (sau)')\n\ny_hat = predict(6.5, w, b)\nprint(f'Dự đoán cho sinh viên ôn 6.5 giờ: {y_hat:.2f} điểm')", "out": "Sau huấn luyện: w = 0.8113, b = 0.9121\nMAE: 1.1250 (trước) -> 0.4694 (sau)\nMSE: 1.5625 (trước) -> 0.3240 (sau)\nDự đoán cho sinh viên ôn 6.5 giờ: 6.19 điểm", "checks": []}}, "definedIn": {"predict": 1, "compute_loss": 1, "compute_gradient": 1, "update_weight": 1, "X": 3, "Y": 3, "compute_mae": 3, "compute_mse": 3}}</script>
+
+<script type="text/python" id="pyboot">
+from browser import window
+
+ns = {}
+
+def _print(*args, sep=' ', end='\n', file=None, flush=False):
+    window.pyOut(sep.join([str(a) for a in args]) + end)
+
+def _line_of(e):
+    line = 0
+    tb = e.__traceback__
+    while tb is not None:
+        try:
+            if tb.tb_frame.f_code.co_filename == '<string>':
+                line = tb.tb_lineno
+        except Exception:
+            pass
+        tb = tb.tb_next
+    return line
+
+def run(code):
+    ns['print'] = _print
+    try:
+        exec(code, ns)
+        return ['ok', '', 0]
+    except SyntaxError as e:
+        msg = e.msg if hasattr(e, 'msg') else str(e)
+        return [type(e).__name__, str(msg), e.lineno or 0]
+    except Exception as e:
+        return [type(e).__name__, str(e), _line_of(e)]
+
+def check(text):
+    res = []
+    for ex in text.split('\n'):
+        try:
+            res.append(1 if eval(ex, ns) else 0)
+        except NameError:
+            res.append(-1)
+        except Exception:
+            res.append(0)
+    return res
+
+def reset():
+    ns.clear()
+
+window.pyRun = run
+window.pyCheck = check
+window.pyReset = reset
+window.pyReady()
+</script>
+
+<script>
+(function () {
+  var DATA = JSON.parse(document.getElementById('steps-data').textContent);
+  var STEPS = DATA.steps;
+  var ORDER = Object.keys(STEPS).sort(function (a, b) { return a - b; });
+  var engineBox = document.getElementById('engine');
+  var engineText = document.getElementById('engine-text');
+  var progressEl = document.getElementById('progress');
+  var outBuf = '';
+  var engineReady = false;
+  var passed = {};
+
+  /* ---------- lưu tạm trên trình duyệt ---------- */
+  function store(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+  function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+  /* ---------- trình chạy Python (Brython) ---------- */
+  function setEngine(state, text) {
+    engineBox.dataset.state = state;
+    engineText.textContent = text;
+  }
+  function engineFailed() {
+    if (engineReady) return;
+    setEngine('failed', 'Trình duyệt này chưa chạy được Python trên trang. Bạn vẫn gõ và bấm "Kiểm tra cách gõ" được.');
+    document.querySelectorAll('.btn-run').forEach(function (b) { b.disabled = true; b.title = 'Không chạy được Python trên trình duyệt này'; });
+  }
+  window.pyOut = function (s) { outBuf += s; };
+  window.pyReady = function () {
+    engineReady = true;
+    setEngine('ready', 'Python đã sẵn sàng. Bấm Chạy ở từng bước.');
+    document.querySelectorAll('.btn-run').forEach(function (b) { b.disabled = false; });
+  };
+  var canEval = (function () { try { return Function('return 2')() === 2; } catch (e) { return false; } })();
+  if (!canEval) {
+    engineFailed();
+  } else {
+    var timer = setTimeout(engineFailed, 30000);
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/brython@3.13.2/brython.min.js';
+    s.onload = function () {
+      try { window.brython({ debug: 1 }); } catch (e) { clearTimeout(timer); engineFailed(); }
+    };
+    s.onerror = function () { clearTimeout(timer); engineFailed(); };
+    document.head.appendChild(s);
+  }
+
+  /* ---------- tiện ích ---------- */
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function stripComment(line) {
+    var q = null;
+    for (var i = 0; i < line.length; i++) {
+      var c = line[i];
+      if (q) { if (c === '\\') { i++; } else if (c === q) { q = null; } }
+      else if (c === '"' || c === "'") { q = c; }
+      else if (c === '#') { return line.slice(0, i); }
+    }
+    return line;
+  }
+  function codeLines(text) {
+    var out = [];
+    text.replace(/\r/g, '').split('\n').forEach(function (raw, i) {
+      var noCom = stripComment(raw.replace(/\t/g, '    ')).replace(/\s+$/, '');
+      if (!noCom.trim()) return;
+      out.push({ no: i + 1, indent: noCom.match(/^ */)[0].length, body: noCom.replace(/\s+/g, ''), shown: noCom.trim() });
+    });
+    return out;
+  }
+  function normOut(t) { return t.replace(/\r/g, '').split('\n').map(function (l) { return l.replace(/\s+$/, ''); }).join('\n').replace(/\n+$/, ''); }
+  function numbersOf(t) { return (t.match(/-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/gi) || []).join(' '); }
+
+  /* ---------- ô soạn code ---------- */
+  var editors = {};
+  function updateGutter(n, markLine) {
+    var ed = editors[n];
+    var count = Math.max(8, ed.value.split('\n').length);
+    var g = ed.parentNode.querySelector('.gutter');
+    var html = '';
+    for (var i = 1; i <= count; i++) html += '<span' + (i === markLine ? ' class="mark"' : '') + '>' + i + '</span>';
+    g.innerHTML = html;
+    ed.style.height = 'auto';
+    ed.style.height = ed.scrollHeight + 'px';
+  }
+  function insertText(ed, text) {
+    ed.focus();
+    var ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch (e) { ok = false; }
+    if (!ok) {
+      var s = ed.selectionStart, e2 = ed.selectionEnd;
+      ed.setRangeText(text, s, e2, 'end');
+      ed.dispatchEvent(new Event('input'));
+    }
+  }
+  function onKey(ev) {
+    var ed = ev.target, n = ed.dataset.step;
+    var s = ed.selectionStart, e = ed.selectionEnd, v = ed.value;
+    var lineStart = v.lastIndexOf('\n', s - 1) + 1;
+    var before = v.slice(lineStart, s);
+    if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') { ev.preventDefault(); runStep(n); return; }
+    if (ev.key === 'Tab' && !ev.shiftKey) { ev.preventDefault(); insertText(ed, '    '); return; }
+    if (ev.key === 'Tab' && ev.shiftKey) {
+      ev.preventDefault();
+      var lead = v.slice(lineStart).match(/^ {1,4}/);
+      if (lead) { ed.setSelectionRange(lineStart, lineStart + lead[0].length); insertText(ed, ''); ed.setSelectionRange(Math.max(lineStart, s - lead[0].length), Math.max(lineStart, s - lead[0].length)); }
+      return;
+    }
+    if (ev.key === 'Enter' && !ev.shiftKey && s === e) {
+      ev.preventDefault();
+      var indent = before.match(/^ */)[0];
+      if (/:\s*$/.test(stripComment(before))) indent += '    ';
+      insertText(ed, '\n' + indent);
+      return;
+    }
+    if (ev.key === 'Backspace' && s === e && before.length > 0 && /^ +$/.test(before)) {
+      ev.preventDefault();
+      var k = before.length % 4 || 4;
+      ed.setSelectionRange(s - k, s);
+      insertText(ed, '');
+    }
+  }
+  ORDER.forEach(function (n) {
+    var ed = document.getElementById('ed-' + n);
+    editors[n] = ed;
+    var saved = load('slr-ed-' + n);
+    if (saved) ed.value = saved;
+    ed.addEventListener('keydown', onKey);
+    ed.addEventListener('input', function () { store('slr-ed-' + n, ed.value); updateGutter(n, 0); });
+    updateGutter(n, 0);
+  });
+
+  /* ---------- hiển thị kết quả ---------- */
+  function show(n, kind, html, markLine) {
+    var box = document.getElementById('res-' + n);
+    box.className = 'result ' + kind;
+    box.innerHTML = html;
+    box.hidden = false;
+    updateGutter(n, markLine || 0);
+  }
+  function markPassed(n, ok) {
+    passed[n] = ok;
+    var a = document.querySelector('.steps-nav a[href="#buoc-' + n + '"]');
+    if (a) a.classList.toggle('done', !!ok);
+    var done = ORDER.filter(function (k) { return passed[k]; }).length;
+    progressEl.textContent = done ? 'Đã chạy đúng ' + done + '/' + ORDER.length + ' bước' : '';
+  }
+  function stdoutBlock(out) {
+    if (!out) return '';
+    return '<div class="stdout-label">Màn hình của bạn</div><pre>' + esc(out) + '</pre>';
+  }
+
+  /* bước nào tạo ra tên này? */
+  function stepDefining(name, before) {
+    var re = new RegExp('^\\s*(def\\s+' + name + '\\b|[\\w\\s,]*\\b' + name + '\\b[\\w\\s,]*=(?!=))', 'm');
+    var found = 0;
+    ORDER.forEach(function (k) { if (+k < +before && re.test(STEPS[k].ref)) found = +k; });
+    return found;
+  }
+
+  function explainError(n, type, msg, line) {
+    var title, tips = [];
+    var where = line ? ' ở dòng ' + line : '';
+    if (type === 'IndentationError' || type === 'TabError' || /indent/i.test(msg)) {
+      title = 'Lỗi thụt lề' + where;
+      if (/unexpected indent/.test(msg)) tips.push('Dòng này bị thụt vào thừa. Các dòng cùng cấp phải thẳng hàng với nhau.');
+      else if (/expected an indented block/.test(msg)) tips.push('Sau một dòng kết thúc bằng dấu <code>:</code> (như <code>def ...:</code> hay <code>for ...:</code>) phải có ít nhất một dòng thụt vào 4 dấu cách.');
+      else tips.push('Mỗi cấp thụt lề dùng đúng 4 dấu cách (hoặc phím Tab). Các dòng bên trong cùng một <code>def</code> hay <code>for</code> phải thẳng hàng.');
+    } else if (type === 'SyntaxError') {
+      title = 'Lỗi cú pháp' + where + ': Python không hiểu cách viết';
+      if (/never closed|unexpected EOF/.test(msg)) tips.push('Thiếu dấu đóng ngoặc <code>)</code>, <code>]</code> hoặc <code>}</code>. Đếm lại số ngoặc mở và ngoặc đóng (có khi lỗi nằm ở dòng phía trên).');
+      else if (/expected ':'/.test(msg)) tips.push('Thiếu dấu hai chấm <code>:</code> ở cuối dòng <code>def ...</code> hoặc <code>for ...</code>.');
+      else if (/unterminated string|EOL/.test(msg)) tips.push('Thiếu dấu nháy đóng chuỗi <code>\'</code> hoặc <code>"</code>.');
+      else if (/does not match opening parenthesis|unmatched/.test(msg)) tips.push('Dấu ngoặc đóng không khớp với dấu ngoặc mở. Ví dụ mở bằng <code>(</code> thì phải đóng bằng <code>)</code>.');
+      else tips.push('Kiểm tra dấu phẩy, dấu <code>=</code>, dấu ngoặc, chữ <code>f</code> trước chuỗi trong <code>print(f\'...\')</code>, và tên hàm.');
+    } else if (type === 'NameError') {
+      var m = msg.match(/name '([^']+)'/);
+      var name = m ? m[1] : '';
+      title = 'Python không biết tên <code>' + esc(name) + '</code>' + where;
+      var k = name ? stepDefining(name, n) : 0;
+      if (k) {
+        tips.push('<code>' + esc(name) + '</code> được tạo ở <a href="#buoc-' + k + '">bước ' + k + '</a>. Hãy chạy bước ' + k + ' (và các bước trước nó) rồi chạy lại bước này.');
+        tips.push('Nếu đã chạy rồi mà vẫn lỗi, có thể bạn gõ sai tên. Python phân biệt chữ hoa và chữ thường: <code>X</code> khác <code>x</code>, <code>Print</code> khác <code>print</code>.');
+      } else {
+        tips.push('Có thể bạn gõ sai tên. Python phân biệt chữ hoa và chữ thường: <code>X</code> khác <code>x</code>, <code>Print</code> khác <code>print</code>.');
+      }
+    } else if (type === 'TypeError') {
+      title = 'Lỗi kiểu dữ liệu' + where;
+      tips.push('Thường do gọi hàm thiếu hoặc thừa đầu vào (ví dụ <code>predict(x, w)</code> thiếu <code>b</code>), hoặc tính toán giữa số và chữ. So lại dòng này với code mẫu.');
+    } else if (type === 'IndexError') {
+      title = 'Lấy phần tử không tồn tại' + where;
+      tips.push('List có 4 phần tử thì chỉ có vị trí 0, 1, 2, 3. Kiểm tra <code>range(...)</code> và chỉ số trong <code>[ ]</code>.');
+    } else if (type === 'ZeroDivisionError') {
+      title = 'Chia cho 0' + where;
+      tips.push('Kiểm tra phép chia, ví dụ <code>total / len(X)</code>: <code>X</code> có đang rỗng không?');
+    } else {
+      title = 'Code bị lỗi khi chạy' + where;
+      tips.push('So lại dòng này với code mẫu.');
+    }
+    tips.push('Bấm <strong>Kiểm tra cách gõ</strong> để tìm dòng bạn gõ khác code mẫu.');
+    return '<div class="verdict">✗ ' + title + '</div><ul>' + tips.map(function (t) { return '<li>' + t + '</li>'; }).join('') +
+      '</ul><div class="raw">Thông báo gốc của Python: ' + esc(type) + ': ' + esc(msg) + '</div>';
+  }
+
+  /* ---------- Chạy ---------- */
+  function runStep(n) {
+    if (!engineReady) return;
+    var code = editors[n].value;
+    if (!code.trim()) { show(n, 'warn', '<div class="verdict">Ô đang trống</div><p>Hãy gõ lại code mẫu vào ô trước khi bấm Chạy.</p>'); return; }
+    outBuf = '';
+    var res;
+    try { res = Array.from(window.pyRun(code)); } catch (e) { res = ['Error', String(e), 0]; }
+    var out = outBuf;
+    if (res[0] !== 'ok') { markPassed(n, false); show(n, 'err', explainError(n, res[0], res[1], res[2]) + stdoutBlock(out), res[2]); return; }
+
+    var st = STEPS[n];
+    if (st.checks && st.checks.length) {
+      var r = Array.from(window.pyCheck(st.checks.map(function (c) { return c[1]; }).join('\n')));
+      var allOk = r.every(function (x) { return x === 1; });
+      var items = st.checks.map(function (c, i) {
+        var mark = r[i] === 1 ? '✓' : '✗';
+        var note = r[i] === -1 ? ' <span class="raw">(chưa có hàm hoặc biến này: kiểm tra lại tên đã gõ)</span>' : (r[i] === 0 ? ' <span class="raw">(sai: kiểm tra lại công thức)</span>' : '');
+        return '<li>' + mark + ' <code>' + esc(c[0]) + '</code>' + note + '</li>';
+      }).join('');
+      markPassed(n, allOk);
+      if (allOk) show(n, 'ok', '<div class="verdict">✓ Chạy đúng! Ô này không in gì ra màn hình, nhưng trang đã tự kiểm tra:</div><ul>' + items + '</ul>' + stdoutBlock(out));
+      else show(n, 'warn', '<div class="verdict">Code chạy được nhưng chưa đúng hết</div><ul>' + items + '</ul><p>Bấm <strong>Kiểm tra cách gõ</strong> để tìm chỗ gõ khác code mẫu.</p>' + stdoutBlock(out));
+      return;
+    }
+
+    var got = normOut(out), exp = normOut(st.out);
+    if (got === exp) { markPassed(n, true); show(n, 'ok', '<div class="verdict">✓ Chạy đúng! Kết quả khớp với kết quả mong đợi.</div>' + stdoutBlock(out)); return; }
+    if (!got) { markPassed(n, false); show(n, 'warn', '<div class="verdict">Code chạy được nhưng không in ra gì</div><p>Kiểm tra lại các dòng <code>print(...)</code>: có bị thiếu, hoặc bị thụt lề sai nên không được chạy không?</p>'); return; }
+    var gl = got.split('\n'), el = exp.split('\n'), i = 0;
+    while (i < Math.min(gl.length, el.length) && gl[i] === el[i]) i++;
+    var cmp = '<div class="cmp"><span>Bạn được</span><code>' + esc(gl[i] !== undefined ? gl[i] : '(không có dòng này)') + '</code><span>Mong đợi</span><code>' + esc(el[i] !== undefined ? el[i] : '(không có dòng này)') + '</code></div>';
+    if (numbersOf(got) === numbersOf(exp)) {
+      markPassed(n, true);
+      show(n, 'ok', '<div class="verdict">✓ Các con số đều đúng!</div><p>Chỉ khác một chút về chữ hoặc khoảng trắng ở dòng ' + (i + 1) + ' của kết quả:</p>' + cmp + stdoutBlock(out));
+    } else {
+      markPassed(n, false);
+      show(n, 'warn', '<div class="verdict">Code chạy được nhưng kết quả chưa khớp</div><p>Khác nhau từ dòng ' + (i + 1) + ' của kết quả:</p>' + cmp +
+        '<p>Bấm <strong>Kiểm tra cách gõ</strong> để tìm chỗ gõ khác code mẫu. Nếu đã chạy bước này nhiều lần, thử bấm "Xóa bộ nhớ" ở đầu trang rồi chạy lại từ bước 1.</p>' + stdoutBlock(out));
+    }
+  }
+
+  /* ---------- Kiểm tra cách gõ ---------- */
+  function firstDiff(a, b) { var i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; return i; }
+  function markAt(text, i) { return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + 1) || ' ') + '</mark>' + esc(text.slice(i + 1)); }
+  function checkTyping(n) {
+    var mine = codeLines(editors[n].value), ref = codeLines(STEPS[n].ref);
+    if (!mine.length) { show(n, 'warn', '<div class="verdict">Ô đang trống</div><p>Hãy gõ lại code mẫu vào ô trước.</p>'); return; }
+    for (var i = 0; i < Math.max(mine.length, ref.length); i++) {
+      var a = mine[i], b = ref[i];
+      if (!a) {
+        show(n, 'warn', '<div class="verdict">Bạn còn thiếu ' + (ref.length - mine.length) + ' dòng</div><p>Dòng tiếp theo cần gõ là:</p><div class="cmp"><span>Code mẫu</span><code>' + esc(b.shown) + '</code></div>');
+        return;
+      }
+      if (!b) { show(n, 'warn', '<div class="verdict">Dòng ' + a.no + ' bị thừa so với code mẫu</div><div class="cmp"><span>Bạn gõ</span><code>' + esc(a.shown) + '</code></div>', a.no); return; }
+      if (a.body !== b.body) {
+        var d = firstDiff(a.body, b.body);
+        show(n, 'err', '<div class="verdict">Dòng ' + a.no + ' khác code mẫu</div><p>Ký tự khác đầu tiên được tô màu (không tính khoảng trắng):</p><div class="cmp"><span>Bạn gõ</span><code>' + markAt(a.body, d) + '</code><span>Code mẫu</span><code>' + markAt(b.body, d) + '</code></div>', a.no);
+        return;
+      }
+      if (a.indent !== b.indent) {
+        show(n, 'err', '<div class="verdict">Dòng ' + a.no + ' thụt lề chưa đúng</div><p>Bạn thụt vào ' + a.indent + ' dấu cách, code mẫu thụt vào ' + b.indent + ' dấu cách.</p><div class="cmp"><span>Code mẫu</span><code>' + esc(' '.repeat(b.indent) + b.shown) + '</code></div>', a.no);
+        return;
+      }
+    }
+    show(n, 'ok', '<div class="verdict">✓ Bạn đã gõ giống code mẫu</div><p>Không tính các dòng chú thích <code>#</code> và khoảng trắng giữa các ký tự.' + (engineReady ? ' Bấm <strong>Chạy</strong> để xem kết quả.' : '') + '</p>');
+  }
+
+  /* ---------- nút bấm ---------- */
+  function armed(btn, label, action) {
+    if (btn.classList.contains('armed')) { btn.classList.remove('armed'); btn.textContent = btn.dataset.label; clearTimeout(btn._t); action(); return; }
+    btn.dataset.label = btn.textContent;
+    btn.classList.add('armed');
+    btn.textContent = label;
+    btn._t = setTimeout(function () { btn.classList.remove('armed'); btn.textContent = btn.dataset.label; }, 3000);
+  }
+  ORDER.forEach(function (n) {
+    document.getElementById('run-' + n).addEventListener('click', function () { runStep(n); });
+    document.getElementById('check-' + n).addEventListener('click', function () { checkTyping(n); });
+    document.getElementById('fill-' + n).addEventListener('click', function (ev) {
+      var ed = editors[n];
+      var doFill = function () { ed.value = STEPS[n].ref; store('slr-ed-' + n, ed.value); updateGutter(n, 0); ed.focus(); };
+      if (!ed.value.trim()) doFill(); else armed(ev.currentTarget, 'Bấm lần nữa để thay', doFill);
+    });
+    document.getElementById('clear-' + n).addEventListener('click', function (ev) {
+      var ed = editors[n];
+      if (!ed.value.trim()) return;
+      armed(ev.currentTarget, 'Bấm lần nữa để xóa', function () {
+        ed.value = ''; store('slr-ed-' + n, ''); updateGutter(n, 0);
+        document.getElementById('res-' + n).hidden = true; ed.focus();
+      });
+    });
+  });
+  document.getElementById('reset-all').addEventListener('click', function (ev) {
+    armed(ev.currentTarget, 'Bấm lần nữa để xóa bộ nhớ', function () {
+      if (engineReady) window.pyReset();
+      ORDER.forEach(function (n) { document.getElementById('res-' + n).hidden = true; markPassed(n, false); updateGutter(n, 0); });
+      setEngine(engineReady ? 'ready' : engineBox.dataset.state, engineReady ? 'Đã xóa bộ nhớ Python. Hãy chạy lại từ bước 1.' : engineText.textContent);
+    });
+  });
+  window.addEventListener('resize', function () { ORDER.forEach(function (n) { updateGutter(n, 0); }); });
+})();
+</script>
+
+</body></html>
